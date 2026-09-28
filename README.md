@@ -6,10 +6,10 @@ Han Luo*, Bingbing Wen*, Guang Yang, Zora Zhiruo Wang, Pan Lu, and Lucy Lu Wang.
 
 \* Equal contribution.
 
-This repository hosts the HERA project page, accompanying paper, and an interactive example of a matched feasible–infeasible task pair.
+This repository hosts the HERA project page and an interactive example of a matched feasible–infeasible task pair.
 
 - Project page: <https://lhannnn.github.io/HERA-Bench/>
-- Paper: [paper.pdf](paper.pdf)
+- Paper: coming soon.
 - Citation: [citation.bib](citation.bib)
 
 ## Website
