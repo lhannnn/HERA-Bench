@@ -2,40 +2,37 @@
 
 **Harness–Environment Co-Evolution for Reliable Agentic Abstention**
 
-Han Luo*, Bingbing Wen*, Guang Yang, Zora Zhiruo Wang, Pan Lu, and Lucy Lu Wang.
+[Project page](https://lhannnn.github.io/HERA-Bench/) · [Dataset](https://huggingface.co/datasets/sxcn/HERA-Bench) · [Citation](citation.bib)
 
-\* Equal contribution.
+HERA-Bench contains 60 matched feasible–infeasible task pairs (120 instances). This repository provides the base and final harnesses and a shared runner. Tasks, executable environments, and grading are hosted on Hugging Face.
 
-This repository hosts the HERA project page and an interactive example of a matched feasible–infeasible task pair.
+## Setup
 
-- Project page: <https://lhannnn.github.io/HERA-Bench/>
-- Paper: coming soon.
-- Citation: [citation.bib](citation.bib)
+Python 3.12:
 
-## Website
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+hf auth login  # Required while the dataset is private
+python -m hera_runner download
+python -m hera_runner verify
+```
 
-The website is a static page with no build dependencies. GitHub Pages should publish from `main` at the repository root. All asset paths are relative so the site works under `/HERA-Bench/`.
+## Run
 
-For a local preview, serve this directory with any static HTTP server.
+Set your API key in `OPENAI_API_KEY`. Copy `configs/model.example.json` to `configs/model.json` and set your model ID. Running a model makes API calls.
 
-## Content provenance
+```bash
+python -m hera_runner run --harness base --config configs/model.json \
+  --pairs 1 --output runs/base-pair1
+python -m hera_runner run --harness final --config configs/model.json \
+  --pairs 1 --output runs/final-pair1
+python -m hera_runner score runs/final-pair1
+```
 
-- Results and task details follow the supplied September 26, 2026 manuscript.
-- The method illustration is extracted from Figure 1.
-- The weather example follows Figures 7 and 8 and uses a frozen snapshot; it does not fetch live weather.
-- Baselines, transfer results, and the cost comparison follow Tables 1 and 3 and Section 5.2. Training-pool results are identified separately.
-- Author affiliations follow the author-provided list, with Guang Yang affiliated only with the University of Washington.
-- Han Luo and Bingbing Wen are marked as equal contributors. Contribution markers are display information and are not part of the BibTeX author names.
-
-The files in this initial website release do not include the executable benchmark dataset or harness implementation.
+Use `--pairs all` for all 60 pairs. Both variants are evaluated automatically. See [reproduction details](docs/reproduction.md) for settings, output files, validation, and the evaluation boundary.
 
 ## Citation
 
-```bibtex
-@misc{luo2026hera,
-  title  = {HERA: Harness--Environment Co-Evolution for Reliable Agentic Abstention},
-  author = {Luo, Han and Wen, Bingbing and Yang, Guang and Wang, Zora Zhiruo and Lu, Pan and Wang, Lucy Lu},
-  year   = {2026},
-  url    = {https://lhannnn.github.io/HERA-Bench/}
-}
-```
+See [citation.bib](citation.bib). Updated paper arXiv identifier: **[ARXIV_ID_PENDING]**.

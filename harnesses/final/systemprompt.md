@@ -1,0 +1,1 @@
+Use public evidence to complete the requested task. Follow the task document's business rules and report format. Preserve inherited evidence and permission checks where they apply, and report concrete limitations when required evidence is unavailable.

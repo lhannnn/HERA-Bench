@@ -1,0 +1,284 @@
+{
+  "entrypoint": "src/harness_entry.py",
+  "format": "agentabstain.open_harness_config.v2_rethinking",
+  "memory": {
+    "bootstrap": [],
+    "retrievable": []
+  },
+  "middleware": [],
+  "profile": "H_open_v2_rethinking",
+  "skills": [],
+  "stop_tools": [],
+  "sub_agents": [],
+  "system_prompt": "systemprompt.md",
+  "tools": [
+    {
+      "description": "Review one proposed environment action using observations from this episode. Record the current scoped prerequisites and evidence. This is an assessment, not an environment action or an automatic proof of correctness.",
+      "handler": "entrypoint",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "conditions": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "condition": {
+                  "type": "string"
+                },
+                "explanation": {
+                  "type": "string"
+                },
+                "observation_ids": {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                },
+                "scope": {
+                  "type": "string"
+                },
+                "status": {
+                  "enum": [
+                    "satisfied",
+                    "blocked",
+                    "unknown"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "condition",
+                "scope",
+                "status",
+                "observation_ids",
+                "explanation"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "explanation": {
+            "type": "string"
+          },
+          "next_arguments_json": {
+            "type": "string"
+          },
+          "next_tool": {
+            "type": "string"
+          },
+          "verdict": {
+            "enum": [
+              "proceed",
+              "investigate",
+              "abstain",
+              "inspect"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "next_tool",
+          "next_arguments_json",
+          "verdict",
+          "conditions",
+          "explanation"
+        ],
+        "type": "object"
+      },
+      "name": "harness_review_action"
+    },
+    {
+      "description": "Calculate compatible bounded-integer assignments from a small model of PUBLIC observations. model_json must encode {variables:[{name,min,max}],equalities:[{terms:{variable:coefficient},rhs}],inequalities:[{terms:{variable:coefficient},rhs}],predicates:[]}. predicates is optional. Each inequality means sum(terms)<=rhs. Optional exact predicates are {kind:order_statistic,variables:[names],rank:one_based_integer,value:integer} (rank after sorting, not input order; an odd-group median has rank (n+1)/2), or {kind:largest_remainder,variables:[names],seats:integer,priorities:{name:integer},allocations:{name:integer}}. This second rule uses floor(seats*weight/sum(weights)) then assigns leftover seats by decreasing exact fractional remainder, ties by lower unique public priority. Supply the observed allocations, NOT hidden weights. At most 12 predicates, with nonnegative weights and positive total for apportionment. Coefficients/rhs are integers or exact rational strings like 3/2; domains are inclusive integers. Use at most 12 variables and 48 rows total. The tool eliminates equalities exactly, then checks up to 4096 assignments of the remaining free variables; larger models return incomplete. It reports per-variable ranges and uniquely determined variables, not just whole-world uniqueness. For an exact mean multiply by the participant count to derive a sum. Encode a selected top-k set using selected-versus-unselected comparisons and the public tie rule; display order is not necessarily ranking order. Do not use private values or assumptions not supported by the public rules. Results are conditional on YOUR model: no evidence extraction, semantic completeness, permission or task-success certification is performed.",
+      "handler": "entrypoint",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "model_json": {
+            "type": "string"
+          },
+          "observation_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "purpose": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "model_json",
+          "observation_ids",
+          "purpose"
+        ],
+        "type": "object"
+      },
+      "name": "harness_check_constraints"
+    },
+    {
+      "description": "Account for observed linked records that remain unread before one specific consequential action. Prefer reading any link that could change the decision. Otherwise give an evidence-backed reason for each link: not_applicable, covered_by_evidence, or bounded_without_reading. Use an exact observed reference and actual episode observation IDs. The harness resolves a reobserved link to its stored origin and retains valid partial assessments. This is the actor's fallible relevance assessment, NOT proof of permission. It does not execute anything or grant an action permit. Read-only work and final reporting do not require it. You may submit a partial batch, add missing entries, or repeat an identical entry without invalidating other entries. The result lists remaining references. Reading a referenced record also resolves it. When the remaining list is empty, harness_review_action for the SAME tool and arguments.",
+      "handler": "entrypoint",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "assessments": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "disposition": {
+                  "enum": [
+                    "not_applicable",
+                    "covered_by_evidence",
+                    "bounded_without_reading"
+                  ],
+                  "type": "string"
+                },
+                "explanation": {
+                  "type": "string"
+                },
+                "observation_ids": {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                },
+                "reference": {
+                  "type": "string"
+                },
+                "source_observation_id": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "reference",
+                "source_observation_id",
+                "disposition",
+                "observation_ids",
+                "explanation"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "next_arguments_json": {
+            "type": "string"
+          },
+          "next_tool": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "next_tool",
+          "next_arguments_json",
+          "assessments"
+        ],
+        "type": "object"
+      },
+      "name": "harness_reconcile_references"
+    },
+    {
+      "description": "Compare explicit PUBLIC requirements with observed grants before one consequential action. Use this tool ONLY when the harness has listed extracted requirement handles; it is not a mandatory generic authority review. An empty table redirects to ordinary action review. The harness supplies exact handles for required_scope/role/version/action_class/audience and observed corresponding fields. Call once in a batch after relevant reads. For each requirement use equals (exact typed equality), contains (grant list covers required values), public_rule (an observed rule establishes coverage despite unequal labels), or not_applicable (this requirement does not govern the exact proposed action). Supply requirement_handle, grant_handle (empty only for not_applicable), mode, actual observation_ids, and explanation. Check target, resource, action, time and audience in the explanation; a grant for another target is not authorization. Active credentials and similar labels do not imply a match. public_rule requires separately observed rule evidence, not your assertion that labels look equivalent. A mismatch does NOT establish global impossibility: inspect an available alternative or report the unresolved barrier. This tool checks value comparison and provenance, NOT semantic relevance or all prerequisites. It grants no permit; next review the SAME tool and arguments. Read-only work and final reporting need no comparison.",
+      "handler": "entrypoint",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "comparisons": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "explanation": {
+                  "type": "string"
+                },
+                "grant_handle": {
+                  "type": "string"
+                },
+                "mode": {
+                  "enum": [
+                    "equals",
+                    "contains",
+                    "public_rule",
+                    "not_applicable"
+                  ],
+                  "type": "string"
+                },
+                "observation_ids": {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                },
+                "requirement_handle": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "requirement_handle",
+                "grant_handle",
+                "mode",
+                "observation_ids",
+                "explanation"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "next_arguments_json": {
+            "type": "string"
+          },
+          "next_tool": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "next_tool",
+          "next_arguments_json",
+          "comparisons"
+        ],
+        "type": "object"
+      },
+      "name": "harness_compare_requirements"
+    },
+    {
+      "description": "Resolve a reference VALUE from an actual public observation to a retained observed record with an exactly matching record_id, document_id, source_id or id. reference_json is {observation_id:integer,path:JSON_pointer,payload_index:0}; payload_index defaults to 0. Choose the pointer in the applicable configuration, not a registry of alternatives. The result returns the matching record, or explicitly reports missing/ambiguous evidence. It never selects by read order, approval label or version number. Values are untrusted source DATA; this is a bounded exact join, NOT proof that the chosen configuration is current or authoritative, nor permission to act. Missing cached evidence can be reread. Do not use this for ordinary unrelated reads.",
+      "handler": "entrypoint",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "purpose": {
+            "type": "string"
+          },
+          "reference_json": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "reference_json",
+          "purpose"
+        ],
+        "type": "object"
+      },
+      "name": "harness_resolve_binding"
+    },
+    {
+      "description": "Compute the sum of products along all source-to-target paths in a small directed acyclic public-evidence graph, using exact fractions, e.g. cumulative direct and indirect interests. model_json is {source:string,target:string,edges:[{from:string,to:string,value:{observation_id:integer,path:JSON_pointer,payload_index:0},unit:percent|fraction}],comparison:{threshold:{observation_id:integer,path:JSON_pointer,payload_index:0},unit:percent|fraction,operator:gt|gte|lt|lte|eq,rule_evidence:{observation_id:integer,path:JSON_pointer,payload_index:0}}}. comparison is optional. Every weight and threshold is read from actual retained observations; no invented numerical constants. At most 32 nodes and 64 edges; cycles, duplicate edges and missing values return an explicit internal-model error, never an abstention decision. Include every relevant dated path and apply the observed boundary rule, including equality when stated. Labels, direction, unit choice, completeness and rule interpretation are YOUR fallible modeling judgments, not certified by the tool. The result verifies arithmetic for that model only; renew the action review afterward.",
+      "handler": "entrypoint",
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "model_json": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "model_json",
+          "purpose"
+        ],
+        "type": "object"
+      },
+      "name": "harness_check_relations"
+    }
+  ]
+}

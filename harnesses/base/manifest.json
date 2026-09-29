@@ -1,0 +1,7 @@
+{
+  "format": "agentabstain.harness_policy.v1",
+  "harness_id": "H_AA_openaisdk_v0",
+  "parent_harness_id": null,
+  "policy_file": "policy.md",
+  "policy_sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+}

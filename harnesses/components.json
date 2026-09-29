@@ -1,0 +1,16 @@
+{
+  "base_harness_id": "H_AA_openaisdk_v0",
+  "final_harness_id": "R10::source_report_v1",
+  "source_final_manifest_sha256": "63b026f7da48fd2e0c8566e2ba99e83cd5ac3deb945d8b3d1996690075d24c1e",
+  "final_human_assisted": true,
+  "files": {
+    "harnesses/base/manifest.json": "a73d124b54b1851ca758700d9074f4229f8b0d5ca97e180547ff930ef5f100fc",
+    "harnesses/base/policy.md": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+    "harnesses/final/src/harness_entry.py": "944d1edf7e8c2ba28cdffebda604e6b21894baad3d17d3ccb65547b1d3e7718d",
+    "harnesses/final/code_agent.json": "4176d9f43ab6b741acb32cb21f2779c7f751cc9815342e918fe8986f04abf753",
+    "harnesses/final/systemprompt.md": "1b668054cbe7ea23e955c358f7a975369d4cbb48690b6a11c86492be7f401141"
+  },
+  "runtime": "portable fixed-harness runner; original Docker experiment controller not included",
+  "source_bridge_sha256": "95707adbfb7855648fb8ef73fb4e14f4e89fcfa2ee5a01182ab166d522e2d492",
+  "source_public_contract_sha256": "8c29156553106b3c8fdab912cdd25fc0fc5242c9845445ab6d55de6acb662b52"
+}
