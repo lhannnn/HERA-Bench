@@ -8,7 +8,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/%F0%9F%93%9C_Paper-B31B1B?style=for-the-badge&amp;logo=arxiv&amp;logoColor=white" alt="Paper (coming soon)" height="28">
-  <a href="https://lhannnn.github.io/HERA-Bench/"><img src="https://img.shields.io/badge/%F0%9F%8C%90_Website-00C851?style=for-the-badge" alt="Website" height="28"></a>
+  <a href="https://hera-bench.github.io/"><img src="https://img.shields.io/badge/%F0%9F%8C%90_Website-00C851?style=for-the-badge" alt="Website" height="28"></a>
   <a href="https://huggingface.co/datasets/sxcn/HERA-Bench"><img src="https://img.shields.io/badge/%F0%9F%97%82%EF%B8%8F_Datasets-1E88E5?style=for-the-badge" alt="Datasets" height="28"></a>
 </p>
 <p align="center"><sub>Paper coming soon.</sub></p>
@@ -80,7 +80,7 @@ Each run evaluates both variants. Use `--pairs all` for the full benchmark. See 
   title  = {HERA: Harness--Environment Co-Evolution for Reliable Agentic Abstention},
   author = {Luo, Han and Wen, Bingbing and Yang, Guang and Wang, Zora Zhiruo and Lu, Pan and Wang, Lucy Lu},
   year   = {2026},
-  url    = {https://lhannnn.github.io/HERA-Bench/}
+  url    = {https://hera-bench.github.io/}
 }
 ```
 
