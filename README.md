@@ -1,18 +1,17 @@
 <h1 align="center">HERA: Harness–Environment Co-Evolution<br>for Reliable Agentic Abstention</h1>
 
 <p align="center">
-  <a href="https://lhannnn.github.io/">Han Luo</a>*, Bingbing Wen*, Guang Yang,<br>
-  Zora Zhiruo Wang, Pan Lu, <a href="https://llwang.net/">Lucy Lu Wang</a>
+  Han Luo*, Bingbing Wen*, Guang Yang,<br>
+  Zora Zhiruo Wang, Pan Lu, Lucy Lu Wang
 </p>
 <p align="center"><i>* Equal contribution</i></p>
 
 <p align="center">
-  📄 Paper (coming soon) ·
-  <a href="https://lhannnn.github.io/HERA-Bench/">🌐 Project page</a> ·
-  <a href="https://huggingface.co/datasets/sxcn/HERA-Bench">🤗 Dataset</a> ·
-  <a href="https://lhannnn.github.io/HERA-Bench/#results">📊 Results</a> ·
-  <a href="#citation">Citation</a>
+  <img src="https://img.shields.io/badge/%F0%9F%93%9C_Paper-B31B1B?style=for-the-badge&amp;logo=arxiv&amp;logoColor=white" alt="Paper (coming soon)" height="28">
+  <a href="https://lhannnn.github.io/HERA-Bench/"><img src="https://img.shields.io/badge/%F0%9F%8C%90_Website-00C851?style=for-the-badge" alt="Website" height="28"></a>
+  <a href="https://huggingface.co/datasets/sxcn/HERA-Bench"><img src="https://img.shields.io/badge/%F0%9F%97%82%EF%B8%8F_Datasets-1E88E5?style=for-the-badge" alt="Datasets" height="28"></a>
 </p>
+<p align="center"><sub>Paper coming soon.</sub></p>
 
 ## News
 
