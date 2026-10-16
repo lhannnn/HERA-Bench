@@ -1,4 +1,3 @@
-"""HERA tool routing and harness hooks over an SDK-managed MCP connection."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -19,7 +18,6 @@ from .harness import HarnessError
 
 
 def public_tool_name(name: str) -> str:
-    """Keep the model-visible names used by the fixed HERA harnesses."""
     parts = name.split('.')
     public = '__'.join(parts)
     if len(public) > 64:
@@ -55,7 +53,6 @@ class ToolRoute:
 
 
 class EnvironmentServer(MCPServer):
-    """Own tool routing while the SDK owns the stdio connection and lifecycle."""
 
     def __init__(self, *, harness_program=None, fail_closed=False, **transport_options):
         policy_options = {

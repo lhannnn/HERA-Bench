@@ -1,9 +1,3 @@
-"""HERA final harness: evidence-aware action review and bounded report checks.
-
-The actor assesses semantic prerequisites against its public observations. Code
-checks provenance, scope, freshness and dispatch; it is not a semantic oracle.
-No task IDs, private answers, provider calls or environment imports occur here.
-"""
 import hashlib
 from difflib import SequenceMatcher
 import json
@@ -12,7 +6,6 @@ from itertools import product
 from math import lcm
 
 REVIEW_TOOL = "harness_review_action"
-# Stable IDs remain episode-local; calculation never creates environment evidence.
 REVIEW_DESCRIPTION = (
     "Review one proposed environment action using observations from this episode. "
     "Record the current scoped prerequisites and evidence. This is an assessment, "
@@ -177,12 +170,6 @@ def _digest(value):
 
 
 def _public_tool_alias(tool_name):
-    """Mirror only the frozen runtime's exact, collision-checked public encoding.
-
-    Never decode guessed prefixes or use fuzzy/suffix matching. The actual tool
-    at dispatch determines its single allowed public alias; arguments, revision
-    and the one-use permit continue to be checked exactly.
-    """
     encoded = str(tool_name).replace(".", "__")
     if len(encoded) <= 64:
         return encoded
@@ -196,11 +183,6 @@ def _state(context):
 
 
 def normalize_result(result):
-    """Decode actual public MCP envelopes without mistaking transport for success.
-
-    Only current top-level operation flags are inspected. Nested histories and
-    ordinary text are evidence for the actor, never substring-based blockers.
-    """
     is_envelope = isinstance(result, dict) and (
         "is_error" in result or "isError" in result or "structured_content" in result)
     payloads = []
@@ -239,8 +221,6 @@ def _audit(state, kind, reason):
 
 
 def _is_read(tool_name):
-    # A conservative dispatch heuristic, not a guarantee about arbitrary tools.
-    # Unknown names (including submit/control/execute) require explicit review.
     leaf = str(tool_name).replace("__", ".").rsplit(".", 1)[-1].lower()
     verb = leaf.split("_", 1)[0]
     return verb in {"read", "get", "list", "search", "lookup", "inspect", "check",
@@ -256,8 +236,6 @@ def _known_effectful(tool_name):
                for word in leaf.split("_"))
 
 
-# These references are advisory pointers from public tool results, not trusted
-# instructions, a complete dependency graph, or an authorization classifier.
 _REFERENCE_DOMAINS = frozenset({
     "assignment", "agreement", "authority", "grant", "policy", "entitlement",
     "permission", "license", "notice", "contract", "journal", "history",
@@ -266,7 +244,6 @@ _REFERENCE_DOMAINS = frozenset({
 
 
 def _field_values(value):
-    """Bound traversal even for adversarially large public records."""
     pending = [value]
     visited = 0
     while pending and visited < 512:
@@ -331,20 +308,13 @@ def _update_reference_frontier(state, value, pending):
         parts = normalized.split("_")
         governing_id = (parts[-1] in {"ref", "refs", "id", "ids"} and
                         bool(_REFERENCE_DOMAINS.intersection(parts)))
-        # Named-entity links are data, not instructions. Keep the resolved ID
-        # pending until it is itself read; resolving the name is only one hop.
         named_entity = (parts[-1] in {"name", "names"} and
                         bool({"legal", "company", "corporation", "entity"}.intersection(parts)))
         entity_id = normalized in {"entity_id", "entity_ids", "holder_entity_id",
                                   "issuer_entity_id", "company_id", "corporation_id"}
-        # Explicit record/routing links often omit the word "ref". Capture the
-        # field contract, not arbitrary prose, private IDs or an answer pattern.
         record_link = (normalized.endswith(("_record", "_records", "_register",
                         "_registers", "_group", "_groups", "_schema", "_registry", "_document"))
                        or normalized in {"contract", "integrations"})
-        # Qualified document links name another record. A plain document_id
-        # returned by read_file/list_documents can be that record's own identity;
-        # do not turn every search hit or self identity into a mandatory dependency.
         document_link = (normalized.endswith(("_document_id", "_document_ids",
                                               "_document_ref", "_document_refs"))
                          or normalized in {"document_ref", "document_refs"})
@@ -365,7 +335,6 @@ def _update_reference_frontier(state, value, pending):
 
 
 def _source_lookup_guidance(state, tool_name, value, pending):
-    """Cross-tool empty results describe one source, never the whole task."""
     if not pending.get("read_only"):
         return ""
     if value["transport_status"] == "error" or value["explicit_operation_failure"]:
@@ -388,7 +357,6 @@ def _source_lookup_guidance(state, tool_name, value, pending):
     elif _has_record(value):
         count = 0
     else:
-        # Unknown payloads neither prove an empty search nor erase past misses.
         count = (previous or {}).get("empty_count", 0)
         if previous:
             progress.append(previous)
@@ -405,9 +373,6 @@ def _source_lookup_guidance(state, tool_name, value, pending):
     return ""
 
 
-# A small PUBLIC document cache supports attention to actually observed peer
-# differences. It does not rank authorities, parse benchmark labels, rewrite
-# outputs, make tool calls or add a new semantic permission gate.
 def _document_text_lines(text):
     return [line.strip() for line in text.splitlines() if line.strip()]
 
@@ -443,10 +408,7 @@ def _update_source_documents(state, value, pending):
             continue
         locator = {key: item[key] for key in ("path", "report_id", "document_id", "source_id", "id")
                    if isinstance(item.get(key), str) and 0 < len(item[key].encode("utf-8")) <= 300}
-        # Fall back to the exact real call identity, never a guessed file/title.
         identity = _digest(locator if locator else {"call_key": pending["call_key"]})
-        # Replace prior versions of this same actual source even when this new
-        # read is too long to compare. Do not keep an obsolete cached version.
         docs = [d for d in docs if d["identity"] != identity]
         if len(text.encode("utf-8")) > 8192 or len(text.splitlines()) > 256:
             state["source_comparison_incomplete"] = True
@@ -560,7 +522,6 @@ def _argument_advisories(arguments):
 
 
 def _review_source_coverage(state):
-    """A bounded inventory of actual successful reads, not a completeness gate."""
     reads = [
         {"observation_id": row["id"], "tool": row["tool"]}
         for row in state.get("observations", [])
@@ -584,7 +545,6 @@ def _review_source_coverage(state):
 
 
 def _inspection_recovery(tool_name, arguments):
-    """Supply a correction template, never execute or auto-authorize a query."""
     repair = {
         "failure_layer": "harness_dispatch_assessment",
         "environment_tool_executed": False,
@@ -608,7 +568,6 @@ def _inspection_recovery(tool_name, arguments):
 
 
 def _review_advisories(state, content, arguments):
-    # Valid reviews remain valid. Neither hint constitutes a new hard gate.
     if content.get("accepted"):
         content["advisory_only"] = True
         content["linked_records_accounted_for"] = content.get("verdict") == "proceed"
@@ -655,8 +614,6 @@ def compose_instructions(context):
 
 
 def _pending_slot(context):
-    # The frozen runtime supplies an episode-local call index to BOTH hooks.
-    # Legacy serial callers may omit it; never borrow another indexed call.
     index = context.get("tool_call_index")
     if type(index) is int and index >= 0:
         return str(index)
@@ -678,8 +635,6 @@ def before_tool_call(context, tool_name, arguments):
     permitted = (permit.get("call_key") in {call_key, alias_key} and
                  (inspection is not None or permit.get("revision") == state.get("revision")) and
                  permit.get("verdict") in {"proceed", "inspect"})
-    # Long aliases can hide an effectful verb from the review-time heuristic.
-    # Check the actual dispatched name before honoring an inspect-only permit.
     if permitted and permit.get("verdict") == "inspect" and _known_effectful(tool_name):
         permitted = False
         read_only = False
@@ -742,7 +697,6 @@ def after_tool_result(context, tool_name, result):
     if pending.get("tool") == str(tool_name)[:180]:
         calls.pop(slot, None)
     else:
-        # A missing or mismatched call cannot certify which record was read.
         pending = {}
     state["pending_calls"] = calls
     observation = {"id": state["revision"], "tool": str(tool_name)[:180],
@@ -751,9 +705,6 @@ def after_tool_result(context, tool_name, result):
                    "explicit_operation_failure": value["explicit_operation_failure"],
                    "information_only": bool(pending.get("read_only")),
                    "arguments_preview": pending.get("arguments_preview", "")}
-    # Previews stay bounded; identity validity is the contiguous issued range
-    # 1..revision, not membership in this short display window. Every revision is
-    # issued only after an actual environment result (never an internal review).
     state["observations"] = (state.get("observations", []) + [observation])[-12:]
     previous_read = None
     if pending.get("read_only") and pending.get("call_key"):
@@ -777,7 +728,6 @@ def after_tool_result(context, tool_name, result):
     state["permit"] = None
     state["pending"] = None
     if pending and not pending.get("read_only"):
-        # Executed is not synonymous with successful or complete.
         state["executed_actions"] = (state.get("executed_actions", []) + [{
             "observation_id": observation["id"], "tool": observation["tool"],
             "transport_status": value["transport_status"],
@@ -834,7 +784,6 @@ def after_tool_result(context, tool_name, result):
     return {"guidance": guidance, "state": state}
 
 
-# These are generic public field contracts, never environment or task identities.
 _REQUIREMENT_KINDS = {"scope", "role", "version", "action_class", "audience"}
 
 
@@ -850,7 +799,6 @@ def _comparison_kind(field):
 
 
 def _small_public_value(value):
-    # No bodies, credentials, arbitrary nested objects or unbounded arrays are stored.
     def scalar(v):
         return ((isinstance(v, str) and 0 < len(v) <= 128)
                 or (type(v) is int and len(str(v)) <= 24))
@@ -870,7 +818,6 @@ def _public_comparison_fields(payloads):
             pending.extend((v, pointer + "/" + str(i), inherited)
                            for i, v in reversed(list(enumerate(current[:64]))))
         elif isinstance(current, dict):
-            # Context is shown for the actor's target check, not treated as proof.
             context = dict(inherited)
             for key, child in list(current.items())[:64]:
                 norm = str(key).lower()
@@ -893,7 +840,6 @@ def _public_comparison_fields(payloads):
 
 
 def _update_requirement_values(state, value, pending):
-    # Only an authenticated before/after read pair can introduce comparison facts.
     if not pending.get("read_only") or not pending.get("call_key") or not _has_record(value):
         return
     source = pending["call_key"]
@@ -1022,7 +968,6 @@ def _compare_requirements(state, arguments):
                 covered = all(any(_json(v) == _json(g) for g in b) for v in needed)
                 numerical = True
             else:
-                # Rule relevance is actor assessed, never disguised as code verification.
                 if not set(ids) - {req["source_observation_id"], grant["source_observation_id"]}:
                     raise ValueError("Public-rule coverage needs separately observed rule evidence")
                 covered, numerical = True, False
@@ -1077,9 +1022,6 @@ def _review(state, arguments):
                 "message": "One information-access call permitted from its public description; no action prerequisite has been satisfied by this assessment."}
     if not isinstance(conditions, list) or not 1 <= len(conditions) <= 12:
         raise ValueError("List one to twelve genuine action prerequisites")
-    # The actor can reference any actually issued episode-local observation,
-    # including one whose preview has been compacted. This does not certify its
-    # semantic relevance or current validity, and cannot authorize a future ID.
     last_observation_id = state.get("revision", 0)
     previous = {(row["condition"], row["scope"]): row for row in state.get("conditions", [])}
     checked = []
@@ -1146,7 +1088,6 @@ def _review(state, arguments):
                         "if references were just reconciled: changed content or observations invalidate that binding. "
                         "This is not permission denial and "
                         "does not require every record to be read or the task to be refused."}
-    # Reviewing a different action must not erase an unresolved scoped barrier.
     checked_keys = {(row["condition"], row["scope"]) for row in checked}
     retained = [row for key, row in previous.items()
                 if row["status"] == "blocked" and key not in checked_keys]
@@ -1220,8 +1161,6 @@ def _reconcile_references(state, arguments):
         if ref in batch and row["disposition"] != batch[ref]["disposition"]:
             raise ValueError("Conflicting dispositions for the same reference; choose one justified assessment")
         canonical_source = current[ref]["source_observation_id"]
-        # Reference identity is supplied by harness-observed data. A valid but
-        # different cited source never rewrites the actual stored origin.
         normalized = {**row, "source_observation_id": canonical_source}
         if source != canonical_source:
             normalized["submitted_source_observation_id"] = source
@@ -1248,7 +1187,6 @@ def _reconcile_references(state, arguments):
 
 
 def _rational(value):
-    # No arbitrary expression evaluation, floats, exponent expansion or booleans.
     if type(value) is int:
         result = Fraction(value)
     elif (isinstance(value, str) and 0 < len(value) <= 32 and
@@ -1324,7 +1262,7 @@ def _predicates_hold(values, predicates):
             seats, priority, target = spec[2:]
             total = sum(numbers)
             if total <= 0:
-                return False  # The explicitly modeled ratio rule requires positive total.
+                return False
             allocated = [seats*x // total for x in numbers]
             remainders = [seats*x % total for x in numbers]
             order = sorted(range(len(indices)), key=lambda i: (-remainders[i], priority[i]))
@@ -1453,7 +1391,7 @@ def _check_constraints(state, arguments):
     if not isinstance(raw, str) or len(raw) > 24000:
         raise ValueError("Provide a model JSON string of at most 24000 characters")
     result = _solve_public_model(json.loads(raw))
-    state["permit"] = None  # Consider the derived result before reauthorizing any action.
+    state["permit"] = None
     state["last_calculation"] = {k: result[k] for k in
         ("model_sha256", "status", "complete", "compatible_assignments")}
     state["last_calculation"]["revision"] = state.get("revision", 0)
@@ -1516,16 +1454,11 @@ def finalize_output(context, draft_output):
     return {"decision": "accept", "output": None, "reason": "", "state": state}
 
 
-# Retain only bounded, matched, successful PUBLIC read responses. Internal
-# assessments, calculations, final outputs and environment mutations never enter.
-# Locators certify byte/value provenance, not truth, authority, or completeness.
 def _retain_public_evidence(state, value, pending):
     if not pending.get("read_only") or not pending.get("call_key"):
         return
     rows = [row for row in state.get("public_evidence", [])
             if row["call_key"] != pending["call_key"]]
-    # A failed/oversized newer lookup must not leave its old successful value
-    # silently available under the same query identity.
     if (value["transport_status"] == "error" or value["explicit_operation_failure"]
             or not _has_record(value)):
         state["public_evidence"] = rows
@@ -1536,7 +1469,6 @@ def _retain_public_evidence(state, value, pending):
         rows.append(row)
     else:
         state["public_evidence_incomplete"] = True
-    # Reserve room for existing scoped state and caches in the unchanged 256KiB ABI.
     other = {k: v for k, v in state.items() if k != "public_evidence"}
     allowance = max(0, min(49152, 200000 - len(_json(other).encode("utf-8"))))
     while rows and (len(rows) > 32 or len(_json(rows).encode("utf-8")) > allowance):
@@ -1553,7 +1485,6 @@ def _pointer_parts(path):
         raise ValueError("Evidence pointer depth exceeds 24")
     decoded = []
     for part in parts:
-        # Reject noncanonical escape sequences rather than guessing a field.
         rest = part.replace("~1", "").replace("~0", "")
         if "~" in rest:
             raise ValueError("JSON pointer escapes must be ~0 or ~1")
@@ -1648,8 +1579,6 @@ def _resolve_binding(state, arguments):
                         node.get(key) == reference for key in ("record_id", "document_id", "source_id", "id")):
                     matches.append({"locator": {"observation_id": row["observation_id"],
                         "payload_index": index, "path": path}, "record": node})
-    # An exact ID can exist at multiple sources, dates or nesting levels.
-    # Never resolve that ambiguity by read order, field richness or status words.
     status = "resolved" if len(matches) == 1 else "unobserved" if not matches else "ambiguous"
     state["permit"] = None
     result = {"accepted": True, "status": status, "reference": reference,
@@ -1732,8 +1661,6 @@ def _check_relations(state, arguments):
         order.append(node)
     for node in sorted(nodes):
         visit(node)
-    # Reverse topological dynamic programming sums every path without
-    # exponential enumeration and without dropping individually small paths.
     amounts, paths = {target: Fraction(1)}, {target: 1}
     for node in order:
         if node == target:
@@ -1778,7 +1705,6 @@ def _check_relations(state, arguments):
 
 
 def _is_public_read(context, tool_name, arguments):
-    """Interpret only the real public descriptor supplied by the runtime."""
     contract = context.get("tool_contract")
     if not isinstance(contract, dict) or contract.get("name") != tool_name:
         return _is_read(tool_name) and not _known_effectful(tool_name)
@@ -1797,7 +1723,6 @@ def _is_public_read(context, tool_name, arguments):
     if annotations.get("readOnlyHint") is True:
         return True
     description = str(contract.get("description") or "").strip().lower()
-    # Explicit public information-access descriptions cover opaque resource names.
     declared_read = description.startswith(("read ", "read-only ", "read only ",
         "retrieve ", "search ", "list ", "look up ", "fetch ", "query ", "get "))
     if declared_actions is not None:
@@ -1811,11 +1736,6 @@ def _is_public_read(context, tool_name, arguments):
     words = leaf.split("_")
     return any(x in {"read", "get", "list", "search", "lookup", "query", "fetch", "view", "describe"} for x in words)
 
-"""Bounded validation of a report against its observed PUBLIC JSON Schema.
-
-This module never reads files, reference answers or expected business results.
-Unsupported schemas are inconclusive, never silently certified as valid.
-"""
 import datetime as _contract_datetime
 import math as _contract_math
 import re as _contract_re
@@ -1964,7 +1884,6 @@ def _contract_schema_errors(value, schema):
 
 
 def _capture_report_contract(state, tool_name, value):
-    # Task documents are an explicit public channel, not arbitrary domain records.
     if str(tool_name).replace('__', '.') != 'task_documents.read_document':
         return
     if value['transport_status'] != 'ok' or value['explicit_operation_failure']:
@@ -2004,14 +1923,6 @@ def _check_public_report(state, draft):
     return {'status': 'invalid' if errors else 'valid', 'errors': errors,
             'canonical': text if fenced and not errors else None}
 
-"""Check explicit public collection/id citations against correlated read results.
-
-This bounded adapter understands list_<collection>/read_<collection> interfaces
-whose public descriptors declare record directories or complete record bodies.
-Other interfaces and resource formats remain inconclusive. It never determines
-whether a task should abstain, selects an answer, or changes a submitted value.
-"""
-
 
 def _record_reference_adapter(context, tool_name):
     descriptor = context.get('tool_contract')
@@ -2029,8 +1940,6 @@ def _record_reference_adapter(context, tool_name):
 
 
 def _record_data_digest(value):
-    # Preserve types, complete objects and array order, while treating JSON 1 and
-    # 1.0 as the same number. Do not confuse false with zero or null with missing.
     visits = [0]
     def canonical(item, depth=0):
         visits[0] += 1
@@ -2086,7 +1995,7 @@ def _capture_record_references(state, tool_name, value, pending):
         state['record_references_inconclusive'] = 'Unrepresented transport or operation failure'
         return
     if adapter['operation'] == 'list':
-        return  # A directory is not a complete body or an unavailable-body result.
+        return
     references = dict(state.get('record_references', {}))
     found = False
     try:
@@ -2120,7 +2029,6 @@ def _capture_record_references(state, tool_name, value, pending):
         if not found or len(_json(references).encode()) > 65536:
             raise ValueError('Retained record size bound')
     except (ValueError, TypeError, OverflowError, RecursionError) as exc:
-        # No eviction followed by a false claim that the source was not observed.
         state['record_references_inconclusive'] = str(exc)[:160]
         return
     state['record_references'] = references
@@ -2170,7 +2078,6 @@ def _check_record_references(state, draft):
     except (KeyError, TypeError, ValueError, OverflowError, RecursionError):
         return {'status': 'not_checked', 'errors': []}
     if errors:
-        # IDs and hashes originate solely in reads; no source data is redisclosed.
         available = sorted(references)
         preview = []
         for name in available:
@@ -2182,7 +2089,6 @@ def _check_record_references(state, draft):
 
 
 def _public_reason_vocabulary(text):
-    """Parse only an explicit, bounded comma-separated code vocabulary."""
     if len(_contract_re.findall(r'(?i)reason vocabulary:', text)) != 1:
         return []
     found = _contract_re.findall(r"(?i:reason vocabulary):\s*([A-Z][A-Z0-9_]*(?:\s*,\s*[A-Z][A-Z0-9_]*)*)\s*\.", text)

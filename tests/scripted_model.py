@@ -1,4 +1,3 @@
-"""Deterministic SDK test double. Never contacts a model provider."""
 import json
 from agents import Model, ModelResponse, Usage
 from openai.types.responses import ResponseFunctionToolCall, ResponseOutputMessage, ResponseOutputText

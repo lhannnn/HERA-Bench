@@ -199,7 +199,7 @@ class DatasetIntegration(NetworkBlocked, unittest.TestCase):
                               for e in reference['events']]
                     answer = json.dumps(reference['answer'])
                     if harness == 'final' and number == 1:
-                        steps += ['{}', answer]  # Exercise the real public report repair gate.
+                        steps += ['{}', answer]
                     else:
                         steps += [answer]
                     model = ScriptedModel(steps)

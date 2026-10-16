@@ -1,4 +1,3 @@
-"""Run one fixed harness over paired MCP episodes and record trusted scores."""
 from __future__ import annotations
 import asyncio
 import hashlib
@@ -35,7 +34,6 @@ def code_identity():
 
 
 async def episode(*, root, task, side, harness, model, settings, out, max_turns=30):
-    """`model` is injectable for offline SDK tests; it never receives controller metadata."""
     set_tracing_disabled(True)
     out = Path(out).resolve()
     out.mkdir(parents=True, exist_ok=False)
@@ -88,7 +86,6 @@ async def episode(*, root, task, side, harness, model, settings, out, max_turns=
             if terminal and terminal['decision'] in ('replace', 'abstain'):
                 response = terminal['output']
     except Exception as exc:
-        # Provider exception strings may contain request headers or secrets.
         error = {'phase': phase, 'type': type(exc).__name__}
     finally:
         if client:

@@ -1,4 +1,3 @@
-"""Minimal SDK bridge retaining the evaluated prompt and tool-hook behavior."""
 from __future__ import annotations
 import json
 from typing import Any, Callable
@@ -18,11 +17,6 @@ def coerce_final_output(value):
     return json.dumps(value, ensure_ascii=False)
 
 class _CompletedModelUsageHooks(RunHooks):
-    """Retain completed main-model usage even if a later model call fails.
-
-    This hook observes only responses already returned to the Agents SDK. It
-    does not retry a run, a turn, candidate middleware, or an environment tool.
-    """
 
     def __init__(self) -> None:
         self._responses: list[dict[str, int]] = []
@@ -53,7 +47,6 @@ class _CompletedModelUsageHooks(RunHooks):
         return self._model_call_starts
 
 def _compose_program_instructions(program: Any, task_prompt: str, additional_instructions: str) -> str:
-    """Keep the official task intact and append only public harness guidance."""
     if program.policy_text.strip():
         effective = program.policy_text.rstrip() + '\n\n<official_task_instructions>\n' + task_prompt + '\n</official_task_instructions>'
     else:
@@ -63,7 +56,6 @@ def _compose_program_instructions(program: Any, task_prompt: str, additional_ins
     return effective + '\n\n<harness_runtime_instructions>\n' + additional_instructions.rstrip() + '\n</harness_runtime_instructions>'
 
 def _public_tool_result(result: CallToolResult) -> dict[str, Any]:
-    """Return only the ordinary model-visible MCP result to candidate code."""
     content: list[dict[str, Any]] = []
     for item in result.content:
         if isinstance(item, TextContent):
@@ -78,14 +70,6 @@ def _public_tool_result(result: CallToolResult) -> dict[str, Any]:
     return payload
 
 def _project_harness_public_arguments(arguments: dict[str, Any], *, declared_sensitive_keys: frozenset[str]) -> dict[str, Any]:
-    """Keep schema-declared opaque arguments out of generated-code state.
-
-    The upstream model and the real MCP tool retain the original arguments.
-    Only the generated harness hook receives this projection.  A credential-
-    like name is redacted only when the trusted MCP input schema declared that
-    exact top-level property; an undeclared lookalike still fails closed in the
-    harness runtime.
-    """
     projected: dict[str, Any] = {}
     sensitive_count = 0
     for key, value in arguments.items():
@@ -102,13 +86,6 @@ def _project_harness_public_arguments(arguments: dict[str, Any], *, declared_sen
     return projected
 
 def _project_harness_public_value(value: Any) -> Any:
-    """Project model-visible data onto the narrower generated-code ABI.
-
-    Some benchmark records expose opaque references whose *presence* is public
-    but whose identifier should not become reusable generated-code state.  The
-    model still receives the untouched MCP result; only the candidate hook sees
-    this recursively redacted projection.
-    """
     if isinstance(value, dict):
         projected: dict[str, Any] = {}
         for raw_key, item in value.items():

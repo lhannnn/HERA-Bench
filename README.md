@@ -38,7 +38,6 @@ python -m hera_runner verify
 
 ```bash
 cp configs/model.example.json configs/model.json
-# Edit configs/model.json with your model ID before running.
 python -m hera_runner run --harness base --config configs/model.json \
   --pairs 1 --output runs/base-pair1
 python -m hera_runner run --harness final --config configs/model.json \

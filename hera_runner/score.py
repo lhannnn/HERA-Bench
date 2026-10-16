@@ -1,4 +1,3 @@
-"""Matched-pair aggregation with explicit incomplete-run handling."""
 import json
 from pathlib import Path
 

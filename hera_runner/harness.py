@@ -1,4 +1,3 @@
-"""Adapter for the two fixed, hash-verified HERA harness components."""
 from __future__ import annotations
 
 import hashlib
@@ -26,10 +25,6 @@ def verify_components():
 
 
 class FinalHarness:
-    """Preserve the evaluated seven-hook ABI for the fixed final component.
-
-    This portable adapter is not a sandbox for arbitrary candidate code.
-    """
     def __init__(self):
         verify_components()
         root = ROOT / 'harnesses/final'
@@ -56,7 +51,6 @@ class FinalHarness:
                 ctx['base_instructions'] = base_instructions
             raw = getattr(self.module, hook)(ctx, *contracts._json_clone(list(args)))
             result, state = contracts._validate_hook_result(hook, raw, max_state_bytes=256 * 1024)
-            # The evaluated graph also bounds the aggregate middleware state.
             contracts._validate_state({'entrypoint': state}, 256 * 1024)
             self.state = state
             return result

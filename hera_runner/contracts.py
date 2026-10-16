@@ -1,4 +1,3 @@
-"""HERA public hook contracts for the fixed evaluation harnesses."""
 from __future__ import annotations
 import json, math, re
 from typing import Any, Mapping
@@ -58,10 +57,10 @@ _FORBIDDEN_KEY_FRAGMENTS = (
 )
 
 class OpenHarnessRuntimeError(RuntimeError):
-    """Base class for open-harness runtime failures."""
+    pass
 
 class OpenHarnessPublicDataError(OpenHarnessRuntimeError):
-    """A request or response attempted to cross the public-data boundary."""
+    pass
 
 def _canonical_json_bytes(value: Any) -> bytes:
     try:
@@ -82,7 +81,6 @@ def _normalise_key(key: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", key.casefold()).strip("_")
 
 def _is_public_access_metadata(key, value):
-    # Only non-secret simulation metadata; arbitrary credentials remain denied.
     if key == "access_role":
         return type(value) is str and value in {"owner", "writer", "reader", "freeBusyReader"}
     if key == "credential_status":
@@ -101,7 +99,6 @@ def _is_public_access_metadata(key, value):
     return False
 
 def _assert_public_json(value: Any, *, label: str) -> None:
-    """Reject hidden labels, credentials, non-JSON data, and non-finite values."""
 
     def visit(item: Any, path: str) -> None:
         if item is None or isinstance(item, (bool, int)):

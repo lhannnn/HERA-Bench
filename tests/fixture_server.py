@@ -1,4 +1,3 @@
-"""Synthetic tool server for SDK integration tests; no benchmark answers."""
 from fastmcp import FastMCP
 server = FastMCP('Synthetic test tools')
 
