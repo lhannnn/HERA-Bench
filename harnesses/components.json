@@ -1,0 +1,12 @@
+{
+  "base_harness_id": "HERA_base_v1",
+  "final_harness_id": "R10::source_report_v1",
+  "files": {
+    "harnesses/base/manifest.json": "4cde2c75d619408a327fa56d021c52df4d698e330054c5e46de6841501198c65",
+    "harnesses/base/policy.md": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+    "harnesses/final/src/harness_entry.py": "56eefba8d406b35d0de5b728c59e22c4b8e08c09ed868bc6d4466b8707964248",
+    "harnesses/final/code_agent.json": "61d3ab34805573c7875e93cbb9310168f1a873b5f497430f6f5ed9e3a74f14df",
+    "harnesses/final/systemprompt.md": "1b668054cbe7ea23e955c358f7a975369d4cbb48690b6a11c86492be7f401141"
+  },
+  "runtime": "HERA base/final evaluation runner"
+}
